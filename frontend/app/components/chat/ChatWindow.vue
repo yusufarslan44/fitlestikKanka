@@ -4,7 +4,9 @@ import { useChatStore } from '~/stores/chat';
 import { storeToRefs } from 'pinia';
 
 const chatStore = useChatStore();
-const { activeConversation, currentUser, activeContact } = storeToRefs(chatStore); // Keep currentUser, add sendMessage if needed for other parts, but not for dropdowns here.
+const authStore = useAuthStore();
+const { activeConversation } = storeToRefs(chatStore);
+const { user: currentUser } = storeToRefs(authStore);
 
 
 
@@ -56,10 +58,11 @@ onMounted(() => {
       <!-- Chat Header -->
       <div class="h-16 px-4 py-2 bg-[var(--color-wa-header-bg)] flex justify-between items-center border-b border-[var(--color-wa-border)] shrink-0 z-[100] relative shadow-sm">
         <div class="flex items-center gap-4 cursor-pointer">
-          <UAvatar :src="activeContact?.avatar" :alt="activeContact?.name" :ui="{ image: 'rounded-full object-cover', root: 'w-10 h-10' }" class="w-10 h-10" />
+          <UAvatar :src="activeConversation.user.avatar" :alt="activeConversation.user.username" :ui="{ image: 'rounded-full object-cover', root: 'w-10 h-10' }" class="w-10 h-10" />
           <div class="flex flex-col justify-center">
-            <h3 class="font-normal text-[var(--color-wa-text-primary)] text-base">{{ activeContact?.name }}</h3>
-            <span class="text-xs text-[var(--color-wa-text-secondary)] truncate" v-if="activeContact?.status === 'online'">online</span>
+            <h3 class="font-normal text-[var(--color-wa-text-primary)] text-base">{{ activeConversation.user.username }}</h3>
+            <span v-if="chatStore.isLoadingMessages" class="text-xs text-[var(--color-wa-teal)] animate-pulse">Yükleniyor...</span>
+            <span v-else class="text-xs text-[var(--color-wa-text-secondary)] truncate">online</span>
           </div>
         </div>
         <div class="flex items-center gap-4 text-[var(--color-wa-panel-header-icon)]">
@@ -72,7 +75,7 @@ onMounted(() => {
                     <li v-for="t in (activeConversation?.tasks || [])" :key="t.id" class="flex items-start gap-3 p-2 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-md transition-colors cursor-default">
                        <UIcon :name="t.status === 'completed' ? 'i-heroicons-check-circle' : 'i-heroicons-clock'" class="w-5 h-5 mt-0.5 shrink-0" :class="t.status === 'completed' ? 'text-green-500' : 'text-gray-400'" />
                        <div class="flex-1 min-w-0">
-                          <p class="text-sm text-gray-700 dark:text-gray-200" :class="{ 'line-through opacity-70': t.status === 'completed' }">{{ t.title }}</p>
+                          <p class="text-sm text-gray-700 dark:text-gray-200" :class="{ 'line-through opacity-70': t.status === 'completed' }">{{ t.item_name }}</p>
                           <span class="text-xs text-gray-400" v-if="t.status !== 'completed'">Bekliyor</span>
                        </div>
                     </li>
@@ -134,7 +137,7 @@ onMounted(() => {
               v-for="msg in activeConversation.messages" 
               :key="msg.id" 
               :message="msg" 
-              :is-mine="msg.senderId === currentUser.id" 
+              :is-mine="msg.sender_id === currentUser?.id" 
             />
            </TransitionGroup>
         </div>

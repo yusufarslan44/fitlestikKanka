@@ -10,7 +10,7 @@
 
     <!-- Main Chat Window -->
     <div class="flex-1 h-full">
-      <ChatWindow />
+      <slot />
     </div>
   </div>
 </template>

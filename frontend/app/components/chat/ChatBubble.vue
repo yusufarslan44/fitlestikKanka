@@ -6,8 +6,11 @@ const props = defineProps<{
   isMine: boolean
 }>()
 
-const formatTime = (date: Date) => {
-  return new Date(date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+const formatTime = (value?: string) => {
+  if (!value) return ''
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return ''
+  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 }
 </script>
 
@@ -19,20 +22,20 @@ const formatTime = (date: Date) => {
     >
       <!-- Message Text -->
       <div class="px-1 pt-1 pb-[14px]">
-        {{ message.text }}
+        {{ message.content }}
       </div>
 
       <!-- Meta (Time + Check) relative absolute bottom right -->
       <div class="absolute bottom-1 right-2 flex items-center gap-[3px] select-none">
-         <ClientOnly>
-          <span class="text-[11px] text-[var(--color-wa-text-secondary)] min-w-[30px] text-right">{{ formatTime(message.timestamp) }}</span>
+        <ClientOnly>
+          <span class="text-[11px] text-[var(--color-wa-text-secondary)] min-w-[30px] text-right">{{ formatTime(message.created_at) }}</span>
           <template #fallback>
              <span class="text-[11px] text-[var(--color-wa-text-secondary)]">...</span>
           </template>
         </ClientOnly>
         
         <!-- Checkmark (only for sent messages) -->
-        <span v-if="isMine" :class="message.isRead ? 'text-[#53bdeb]' : 'text-[var(--color-wa-text-secondary)]'">
+        <span v-if="isMine" :class="message.status === 'read' ? 'text-[#53bdeb]' : 'text-[var(--color-wa-text-secondary)]'">
             <!-- Double check SVG (simulated with heroicons for now, but usually custom) -->
             <div class="relative w-4 h-3">
                <UIcon name="i-heroicons-check" class="w-3 h-3 absolute left-0" />

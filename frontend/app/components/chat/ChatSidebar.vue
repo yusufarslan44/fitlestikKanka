@@ -5,22 +5,28 @@ import { storeToRefs } from 'pinia';
 const chatStore = useChatStore();
 const { conversations, activeConversationId } = storeToRefs(chatStore);
 
-const getContact = (conversationId: string) => {
-  const conversation = conversations.value.find(c => c.id === conversationId);
-  if (!conversation) return null;
-  return chatStore.contacts.find(u => u.id === conversation.contactId);
+const authStore = useAuthStore();
+const { user: currentUser } = storeToRefs(authStore);
+
+// Helper to get the other user in the conversation
+const getContact = (conversation: any) => {
+  return conversation.user;
 };
 
 const getLastMessage = (conversation: any) => {
-  if (conversation.lastMessage) return conversation.lastMessage.text;
+  if (conversation.lastMessage) return conversation.lastMessage.content;
   const last = conversation.messages[conversation.messages.length - 1];
-  return last ? last.text : 'No messages yet';
+  return last ? last.content : 'Henüz mesaj yok';
 };
 
-const formatTime = (date?: Date) => {
-  if (!date) return '';
-  return new Date(date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+const formatTime = (dateString?: string) => {
+  if (!dateString) return '';
+  return new Date(dateString).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 };
+
+onMounted(async () => {
+  await chatStore.initialize();
+});
 </script>
 
 <template>
@@ -28,7 +34,7 @@ const formatTime = (date?: Date) => {
     <!-- Header -->
     <div class="h-16 px-4 bg-[var(--color-wa-header-bg)] flex justify-between items-center border-b border-[var(--color-wa-border)] shrink-0">
       <div class="flex items-center gap-2">
-        <UAvatar :src="chatStore.currentUser.avatar" alt="My Profile" :ui="{ image: 'rounded-full object-cover', root: 'w-10 h-10' }" class="w-10 h-10" />
+         <UAvatar :src="currentUser?.avatar" :alt="currentUser?.username" :ui="{ image: 'rounded-full object-cover', root: 'w-10 h-10' }" class="w-10 h-10" />
       </div>
       <div class="flex gap-4 text-[var(--color-wa-panel-header-icon)]">
          <UIcon name="i-heroicons-user-group" class="w-6 h-6 cursor-pointer" />
@@ -59,17 +65,17 @@ const formatTime = (date?: Date) => {
         @click="chatStore.setActiveConversation(conversation.id)"
       >
         <!-- Contact Avatar -->
-         <UAvatar :src="getContact(conversation.id)?.avatar" :alt="getContact(conversation.id)?.name" :ui="{ image: 'rounded-full object-cover', root: 'w-12 h-12' }" class="mr-3 shrink-0 w-12 h-12" />
+         <UAvatar :src="getContact(conversation)?.avatar" :alt="getContact(conversation)?.username" :ui="{ image: 'rounded-full object-cover', root: 'w-12 h-12' }" class="mr-3 shrink-0 w-12 h-12" />
         
         <!-- Content -->
         <div class="flex-1 min-w-0 h-full flex flex-col justify-center border-b border-[var(--color-wa-border)] pr-2">
            <div class="flex justify-between items-baseline mb-1">
               <span class="text-[17px] text-[var(--color-wa-text-primary)] font-normal truncate">
-                {{ getContact(conversation.id)?.name }}
+                {{ getContact(conversation)?.username }}
               </span>
               <ClientOnly>
                 <span class="text-xs text-[var(--color-wa-text-secondary)] whitespace-nowrap ml-2 font-light">
-                 {{ formatTime(conversation.messages[conversation.messages.length-1]?.timestamp) }}
+                 {{ formatTime(conversation.lastMessage?.created_at) }}
                 </span>
                 <template #fallback>
                   <span class="text-xs text-[var(--color-wa-text-secondary)]">...</span>
