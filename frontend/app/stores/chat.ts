@@ -52,7 +52,8 @@ export const useChatStore = defineStore('chat', {
         activeConversationId: null as number | null,
         socket: null as WebSocket | null,
         isConnected: false,
-        isLoadingMessages: false // New state
+        isLoadingMessages: false, // New state
+        pollingTimer: null as ReturnType<typeof setInterval> | null
     }),
 
     getters: {
@@ -73,6 +74,7 @@ export const useChatStore = defineStore('chat', {
             await this.refreshTasks()
             await this.refreshDebts()
             this.connectWebSocket(auth.token)
+            this.startPolling()
 
             // Restore active conversation from cookie
             const cookie = useCookie<number | null>('active_conversation_id')
@@ -170,6 +172,24 @@ export const useChatStore = defineStore('chat', {
             this.socket.onclose = () => {
                 console.log('WS Disconnected')
                 this.isConnected = false
+            }
+        },
+
+        startPolling() {
+            if (import.meta.server) return
+            if (this.pollingTimer) return
+
+            this.pollingTimer = setInterval(() => {
+                void this.refreshTasks()
+                void this.refreshDebts()
+                void this.refreshBalance()
+            }, 5000)
+        },
+
+        stopPolling() {
+            if (this.pollingTimer) {
+                clearInterval(this.pollingTimer)
+                this.pollingTimer = null
             }
         },
 
