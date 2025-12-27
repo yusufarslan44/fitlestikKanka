@@ -1,6 +1,7 @@
 <script setup lang="ts">
 definePageMeta({
-  layout: 'chat'
+  layout: 'chat',
+  middleware: 'auth'
 })
 </script>
 
