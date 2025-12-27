@@ -247,6 +247,7 @@ export const useChatStore = defineStore('chat', {
                 const tasks = await $fetch<Task[]>('/api/tasks/', {
                     headers: { Authorization: `Bearer ${auth.token}` }
                 })
+                console.log('Tasks response (chat):', tasks)
 
                 this.conversations = this.conversations.map((conversation) => ({
                     ...conversation,

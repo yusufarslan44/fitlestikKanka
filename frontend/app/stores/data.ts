@@ -49,6 +49,7 @@ export const useDataStore = defineStore('data', {
                 if (error.value) throw error.value
 
                 if (data.value) {
+                    console.log('Tasks response (dashboard):', data.value)
                     this.tasks = data.value
                 }
             } catch (e) {
